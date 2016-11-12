@@ -79,7 +79,7 @@ aws s3 cp gztosnappy.zip <YOUR CODE BUCKET>/pub/gztosnappy.zip
 
 ###4.2 Deploy the Function
 
-Use the Cloudformation template [gztosnappy.temlplate](./gztosnappy.template) and deploy the lambda function in your AWS environment. Double check that you have set the parameters correctly.
+Use the Cloudformation template [gztosnappy.json](./gztosnappy.json) and deploy the lambda function in your AWS environment. Double check that you have set the parameters correctly.
 
 ###4.3 Test the Function
 
