@@ -25,7 +25,7 @@ def lambda_handler(event, context):
     in_bucket = event['Records'][0]['s3']['bucket']['name']
     in_key = event['Records'][0]['s3']['object']['key']
     in_key_file_name = in_key.split('/')[-1]
-    out_bucket = 'danulab.com'
+    out_bucket = '<YOUR OUTPUT BUCKET>'
     out_prefix = 'stg/processed-snappy/'
     out_key = out_prefix + in_key_file_name.split('.')[0] + '.snappy'
 
