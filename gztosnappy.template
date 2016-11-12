@@ -1,0 +1,285 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "\n    AWS Cloudformation template for GzipToSnappy:\n    This template creates a an S3 bucket and a Lambda function\n    to trigger when gzip files are loaded on the S3 bucket.\n     **WARNING**: You will be billed for AWS resources created.\n    ",
+  "Parameters": {
+    "CodeBucketName": {
+      "Description": "Amazon S3 bucket name where the .zip file     containing your deployment package is stored.",
+      "Type": "String"
+    },
+    "CodeS3Key": {
+      "Default": "pub/gziptosnappy.zip",
+      "Description": "The Amazon S3 object (the deployment package)     key name you want to upload",
+      "Type": "String"
+    },
+    "FunctionName": {
+      "Default": "gziptosnappy",
+      "Description": "The name of the lambda function",
+      "Type": "String"
+    },
+    "InputBucketName": {
+      "Description": "The name of the input bucket",
+      "Type": "String"
+    },
+    "InputKeyPrefix": {
+      "Default": "stg/input-gz/",
+      "Description": "The S3 input folder for incoming files",
+      "Type": "String"
+    },
+    "LambdaMemorySize": {
+      "AllowedValues": [
+        128,
+        192,
+        256,
+        320,
+        384,
+        448,
+        512,
+        576,
+        640,
+        704,
+        768,
+        832,
+        896,
+        960,
+        1024,
+        1088,
+        1152,
+        1216,
+        1280,
+        1344,
+        1408,
+        1472,
+        1536
+      ],
+      "Default": "512",
+      "Description": "Amount of memory to allocate to the lambda function",
+      "Type": "Number"
+    },
+    "LambdaTimeout": {
+      "Default": "180",
+      "Description": "Timeout in seconds for the Lambda function",
+      "Type": "Number"
+    },
+    "OutputBucketName": {
+      "Description": "The name of the output bucket. This is required and must be updated in the lambda function",
+      "Type": "String"
+    },
+    "OutputKeyPrefix": {
+      "Default": "stg/processed-snappy/",
+      "Description": "The S3 input folder for incoming files",
+      "Type": "String"
+    }
+  },
+  "Resources": {
+    "BucketPermission": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Ref": "FunctionName"
+        },
+        "Principal": "s3.amazonaws.com",
+        "SourceAccount": {
+          "Ref": "AWS::AccountId"
+        },
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "aws:arn:s3:::",
+              {
+                "Ref": "S3Bucket"
+              }
+            ]
+          ]
+        }
+      },
+      "Type": "AWS::Lambda::Permission"
+    },
+    "GzipToSnappyFunction": {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "CodeBucketName"
+          },
+          "S3Key": {
+            "Ref": "CodeS3Key"
+          }
+        },
+        "FunctionName": {
+          "Ref": "FunctionName"
+        },
+        "Handler": "gztosnappy.lambda_handler",
+        "MemorySize": {
+          "Ref": "LambdaMemorySize"
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "LambdaExecutionRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "python2.7",
+        "Timeout": {
+          "Ref": "LambdaTimeout"
+        }
+      },
+      "Type": "AWS::Lambda::Function"
+    },
+    "LambdaExecutionRole": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "s3:GetObject",
+                    "s3:PutObject",
+                    "s3:DeleteObject"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::Join": [
+                        ":",
+                        [
+                          "arn",
+                          "aws",
+                          "s3",
+                          "",
+                          "",
+                          {
+                            "Fn::Join": [
+                              "",
+                              [
+                                {
+                                  "Fn::Join": [
+                                    "/",
+                                    [
+                                      {
+                                        "Description": "The name of the input bucket",
+                                        "Type": "String"
+                                      },
+                                      {
+                                        "Default": "stg/input-gz/",
+                                        "Description": "The S3 input folder for incoming files",
+                                        "Type": "String"
+                                      }
+                                    ]
+                                  ]
+                                },
+                                "*"
+                              ]
+                            ]
+                          }
+                        ]
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        ":",
+                        [
+                          "arn",
+                          "aws",
+                          "s3",
+                          "",
+                          "",
+                          {
+                            "Fn::Join": [
+                              "",
+                              [
+                                {
+                                  "Fn::Join": [
+                                    "/",
+                                    [
+                                      {
+                                        "Default": "danulab.com",
+                                        "Description": "The name of the output bucket. This is required",
+                                        "Type": "String"
+                                      },
+                                      {
+                                        "Default": "stg/processed-snappy/",
+                                        "Description": "The S3 input folder for incoming files",
+                                        "Type": "String"
+                                      }
+                                    ]
+                                  ]
+                                },
+                                "*"
+                              ]
+                            ]
+                          }
+                        ]
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "Action": [
+                    "logs:*"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "arn:aws:logs:*:*:*"
+                }
+              ],
+              "Version": "2012-10-17"
+            },
+            "PolicyName": "LambdaGzToSnappy"
+          }
+        ]
+      },
+      "Type": "AWS::IAM::Role"
+    },
+    "S3Bucket": {
+      "Properties": {
+        "BucketName": {
+          "Ref": "InputBucketName"
+        },
+        "NotificationConfiguration": {
+          "LambdaConfigurations": [
+            {
+              "Event": "s3:ObjectCreated:*",
+              "Filter": {
+                "S3Key": {
+                  "Rules": [
+                    {
+                      "Name": "prefix",
+                      "Value": {
+                        "Ref": "InputKeyPrefix"
+                      }
+                    },
+                    {
+                      "Name": "suffix",
+                      "Value": ".gz"
+                    }
+                  ]
+                }
+              },
+              "Function": {
+                "Ref": "FunctionName"
+              }
+            }
+          ]
+        }
+      },
+      "Type": "AWS::S3::Bucket"
+    }
+  }
+}
