@@ -61,7 +61,7 @@
       "Type": "Number"
     },
     "OutputBucketName": {
-      "Description": "The name of the output bucket. This is required and must be updated in the lambda function",
+      "Description": "The name of the output bucket. This is required",
       "Type": "String"
     },
     "OutputKeyPrefix": {
@@ -174,13 +174,10 @@
                                     "/",
                                     [
                                       {
-                                        "Description": "The name of the input bucket",
-                                        "Type": "String"
+                                        "Ref": "InputBucketName"
                                       },
                                       {
-                                        "Default": "stg/input-gz/",
-                                        "Description": "The S3 input folder for incoming files",
-                                        "Type": "String"
+                                        "Ref": "InputKeyPrefix"
                                       }
                                     ]
                                   ]
@@ -210,14 +207,10 @@
                                     "/",
                                     [
                                       {
-                                        "Default": "danulab.com",
-                                        "Description": "The name of the output bucket. This is required",
-                                        "Type": "String"
+                                        "Ref": "OutputBucketName"
                                       },
                                       {
-                                        "Default": "stg/processed-snappy/",
-                                        "Description": "The S3 input folder for incoming files",
-                                        "Type": "String"
+                                        "Ref": "OutputKeyPrefix"
                                       }
                                     ]
                                   ]
